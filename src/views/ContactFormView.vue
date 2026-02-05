@@ -2,6 +2,7 @@
 import { ref, onMounted, reactive } from 'vue'
 import { contactService } from '@/api/contactForm'
 import type { ContactFormData, Error } from '@/types/contactForm.types'
+import logoUrl from '@/assets/logo/LMSH_Logo.png'
 
 const errors = reactive<Error>({})
 const submitted = ref(false)
@@ -15,11 +16,27 @@ let formData: ContactFormData = {
   name: '',
   email: '',
   address: '',
+  museum: '',
   employer: '',
   message: '',
   date: '',
   signature: '',
 }
+
+const museumOptions = [
+  { text: 'Bitte auswählen', value: '' },
+  { text: 'Museum für Archäologie', value: 'Museu für Archäologie' },
+  {
+    text: 'Museum für Kunst und Kulturgeschichte Schloss Gottorf',
+    value: 'Museum für Kunst und Kulturgeschichte Schloss Gottorf',
+  },
+  { text: 'Gottorfer Globus & Barockgarten', value: 'Gottorfer Globus & Barockgarten' },
+  { text: 'Wickinger Museum Haithabu', value: 'Wickinger Museum Haithabu' },
+  { text: 'Freilichtmuseum Molfsee', value: 'Freilichtmuseum Molfsee' },
+  { text: 'Jüdisches Museum', value: 'Jüdisches Museum' },
+  { text: 'Eisenkunstguss Museum Büdelsdorf', value: 'Eisenkunstguss Museum Büdelsdorf' },
+  { text: 'Kloster Cismar', value: 'Kloster Cismar' },
+]
 
 onMounted(() => {
   // Set current date
@@ -62,6 +79,7 @@ const handleSubmit = async () => {
     name: formData.name,
     email: formData.email,
     address: formData.address,
+    museum: formData.museum,
     employer: formData.employer,
     message: formData.message || undefined,
     date: formData.date,
@@ -123,7 +141,7 @@ const startDrawing = (event: MouseEvent | TouchEvent) => {
 
   const ctx = signatureCanvas.value?.getContext('2d')
   if (ctx) {
-    ctx.strokeStyle = '#ffffff'
+    ctx.strokeStyle = '#1f2121'
     ctx.lineWidth = 2
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
@@ -227,16 +245,38 @@ const validateForm = (): boolean => {
 <template>
   <div class="container">
     <div class="form-card">
-      <h1>Kontaktformular</h1>
+      <div class="form-header">
+        <div class="form-header__brand">
+          <img class="form-header__logo" :src="logoUrl" alt="Logo" />
+          <div class="form-header__brandText">
+            <div class="logo-headline">Landesmuseen Schleswig-<br />Holstein</div>
+            <br />
+            <div class="logo-zusatz">Kultur des Nordens</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-header-1">
+        <h1>Pressekontakt</h1>
+      </div>
+
       <p class="description">
-        Bitte füllen Sie alle erforderlichen Felder aus und unterschreiben Sie am Ende des
-        Formulars. Ihre Daten werden vertraulich behandelt.
+        Sehr geehrte Pressevertreterinnen und -vertreter, <br />
+        <br />
+
+        wir freuen uns über Ihr Interese an unseren Museen. Selbstverständlich laden wir Sie zu
+        einem Besuch ein. <br />
+        Bitte hinterlassen Sie uns Ihre Adressdaten und Erreichbarkeiten, damit wir Ihnen auch in
+        Zukunft stets aktuelle Informationen über unser vielfältiges Kulturangebot zukommen lassen
+        können.
       </p>
 
       <form @submit.prevent="handleSubmit">
         <!-- Name -->
         <div class="form-group">
-          <label for="name" class="form-label">Name *</label>
+          <label for="name" class="form-label"
+            >Vor- und Nachname der Journalistin/ des Journalisten *</label
+          >
           <input
             id="name"
             v-model="formData.name"
@@ -276,9 +316,39 @@ const validateForm = (): boolean => {
           <span v-if="errors.address" class="error-message">{{ errors.address }}</span>
         </div>
 
+        <!-- Museum -->
+        <div class="form-group">
+          <label for="employmentType" class="form-label">Museum *</label>
+
+          <select
+            id="employmentType"
+            v-model="formData.museum"
+            class="custom-select"
+            :class="{ error: errors.museum }"
+            @blur="validateField('museum')"
+            required
+          >
+            <option
+              v-for="opt in museumOptions"
+              class="custom-select-content"
+              :key="opt.value"
+              :value="opt.value"
+              :disabled="opt.value === ''"
+            >
+              {{ opt.text }}
+            </option>
+          </select>
+
+          <span v-if="errors.museum" class="error-message">
+            {{ errors.museum }}
+          </span>
+        </div>
+
         <!-- Arbeitgeber -->
         <div class="form-group">
-          <label for="employer" class="form-label">Arbeitgeber *</label>
+          <label for="employer" class="form-label"
+            >Titel der Medien / Publikation / Anschrift des Verlags *</label
+          >
           <input
             id="employer"
             v-model="formData.employer"
@@ -292,7 +362,9 @@ const validateForm = (): boolean => {
 
         <!-- Nachricht (Optional) -->
         <div class="form-group">
-          <label for="message" class="form-label">Nachricht (optional)</label>
+          <label for="message" class="form-label"
+            >Gerne können Sie unserer Pressestele auch eine Nachricht hinterlassen:</label
+          >
           <textarea
             id="message"
             v-model="formData.message"
