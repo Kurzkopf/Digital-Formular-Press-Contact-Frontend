@@ -127,6 +127,8 @@ textarea.form-control {
   touch-action: none;
 }
 
+
+
 .signature-canvas.error {
   border-color: var(--color-error);
 }
