@@ -9,7 +9,6 @@ const submitted = ref(false)
 const signatureCanvas = ref<HTMLCanvasElement | null>(null)
 const isDrawing = ref(false)
 const hasSignature = ref(false)
-
 const displayDate = ref('')
 
 let formData: ContactFormData = {
@@ -86,7 +85,7 @@ const handleSubmit = async () => {
     signature: formData.signature,
   }
 
-  // API-Call mit dem Service
+  // API-Call mit den Daten
   const response = await contactService.submitForm(formData)
   console.log(formData)
 
@@ -96,7 +95,6 @@ const handleSubmit = async () => {
     return
   }
 
-  // Erfolg
   console.log('Erfolgreich gespeichert:', response.data)
   submitted.value = true
 
@@ -180,6 +178,7 @@ const clearSignature = () => {
   }
 }
 
+//Input check
 const validateField = (field: keyof Error) => {
   delete errors[field]
 

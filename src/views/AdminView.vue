@@ -1,46 +1,21 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { api } from '@/api/api'
-
-type Submission = {
-  id: number
-  name: string
-  email: string
-  address: string
-  employer: string
-  message?: string | null
-  submissionDate: string
-  signature: string
-  createdAt: string
-}
-
-type Page<T> = {
-  content: T[]
-  number: number
-  size: number
-  totalElements: number
-  totalPages: number
-  first: boolean
-  last: boolean
-}
+import type { Submission, Page } from '@/types/admin.types'
+import { getAllSubmissions, sendMailSubmission } from '@/api/admin'
 
 const loading = ref(false)
 const error = ref<string | null>(null)
-
 const page = ref(0)
 const size = ref(50)
-
 const data = ref<Page<Submission> | null>(null)
-
 const rows = computed(() => data.value?.content ?? [])
+
 
 const load = async () => {
   loading.value = true
   error.value = null
 
-  const endpoint = `/admin/submissions?page=${page.value}&size=${size.value}&sort=createdAt,desc`
-
-  const res = await api.get<Page<Submission>>(endpoint)
+  const res = await getAllSubmissions(page.value, size.value)
 
   if (res.error) {
     error.value = res.error
@@ -96,7 +71,6 @@ const exportRowAsCsv = (r: Submission) => {
     'employer',
     'message',
     'submissionDate',
-    'signature',
   ]
 
   const row = [
@@ -108,12 +82,15 @@ const exportRowAsCsv = (r: Submission) => {
     r.employer,
     r.message ?? '',
     r.submissionDate,
-    r.signature,
   ]
 
   const csv = [header.map(escapeCsv).join(','), row.map(escapeCsv).join(',')].join('\r\n')
 
   downloadTextFile(csv, `contact-submission-${r.id}.csv`)
+}
+
+const sendMail = async (id: number) => {
+  const resonse = await sendMailSubmission(id)
 }
 
 onMounted(load)
@@ -161,10 +138,10 @@ onMounted(load)
                 Submission date
               </th>
               <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb">
-                Signature
+                Export
               </th>
               <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb">
-                Export
+                Send Mail (Admin)
               </th>
             </tr>
           </thead>
@@ -183,18 +160,15 @@ onMounted(load)
                 {{ r.message ?? '' }}
               </td>
               <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">{{ r.submissionDate }}</td>
-              <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">
-                <img
-                  v-if="r.signature"
-                  :src="r.signature"
-                  alt="Signature"
-                  style="max-height: 48px; display: block"
-                />
-              </td>
 
+              <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">
+                <button type="button" @click="sendMail(r.id)">Send Mail</button>
+              </td>
+              
               <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">
                 <button type="button" @click="exportRowAsCsv(r)">CSV</button>
               </td>
+              
             </tr>
           </tbody>
         </table>

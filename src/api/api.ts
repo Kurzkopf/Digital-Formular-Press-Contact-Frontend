@@ -6,15 +6,10 @@ export interface ApiResponse<T> {
 }
 
 export class ApiService {
-  private baseUrl: string
-
-  constructor(baseUrl: string = 'http://localhost:8080/api') {
-    this.baseUrl = baseUrl
-  }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetch(`${endpoint}`, {
         headers: {
           'Content-Type': 'application/json',
           ...options.headers,
