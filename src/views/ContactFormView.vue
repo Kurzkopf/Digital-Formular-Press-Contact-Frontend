@@ -10,6 +10,8 @@ const signatureCanvas = ref<HTMLCanvasElement | null>(null)
 const isDrawing = ref(false)
 const hasSignature = ref(false)
 const displayDate = ref('')
+const showPopup = ref(false)
+const picture = ref<File | null>(null)
 
 let formData: ContactFormData = {
   name: '',
@@ -20,6 +22,7 @@ let formData: ContactFormData = {
   message: '',
   date: '',
   signature: '',
+  picture: '',
 }
 
 const museumOptions = [
@@ -38,6 +41,7 @@ const museumOptions = [
 ]
 
 onMounted(() => {
+  showPopup.value = true
   // Set current date
   const today = new Date()
   formData.date = today.toISOString().split('T')[0]!
@@ -64,6 +68,11 @@ onMounted(() => {
   }
 })
 
+const closePopup = () => { showPopup.value = false }
+const handleSelect = () => {
+  closePopup()
+}
+
 const handleSubmit = async () => {
   if (!validateForm()) {
     return
@@ -83,6 +92,7 @@ const handleSubmit = async () => {
     message: formData.message || undefined,
     date: formData.date,
     signature: formData.signature,
+    picture: formData.picture,
   }
 
   // API-Call mit den Daten
@@ -107,10 +117,37 @@ const handleSubmit = async () => {
       employer: '',
       message: '',
       signature: '',
+      picture: '',
     })
+    picture.value = null
+    formData.picture = ''
     clearSignature()
     submitted.value = false
   }, 3000)
+}
+
+const base64Image = ref<string>('')
+
+const handleFileChange = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0] || null
+  if (file && file.type.startsWith('image/')) {
+    picture.value = file
+
+    const base64 = await fileToBase64(file)
+    base64Image.value = base64
+    formData.picture = base64
+  }
+}
+
+
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }
 
 const getCoordinates = (event: MouseEvent | TouchEvent) => {
@@ -242,6 +279,41 @@ const validateForm = (): boolean => {
 </script>
 
 <template>
+
+  <div v-if="showPopup" class="modal-overlay" @click.self="closePopup">
+    <div class="modal">
+      <h3>Museum auswählen</h3>
+      <div class="form-group">
+          <label for="employmentType" class="form-label">Museum *</label>
+
+          <select
+            id="employmentType"
+            v-model="formData.museum"
+            class="custom-select"
+            :class="{ error: errors.museum }"
+            @blur="validateField('museum')"
+            required
+          >
+            <option
+              v-for="opt in museumOptions"
+              class="custom-select-content"
+              :key="opt.value"
+              :value="opt.value"
+              :disabled="opt.value === ''"
+            >
+              {{ opt.text }}
+            </option>
+          </select>
+
+          <span v-if="errors.museum" class="error-message">
+            {{ errors.museum }}
+          </span>
+        </div>
+      <button @click="handleSelect">OK</button>
+      <button @click="closePopup">Schließen</button>
+    </div>
+  </div>
+
   <div class="container">
     <div class="form-card">
       <div class="form-header">
@@ -256,14 +328,14 @@ const validateForm = (): boolean => {
       </div>
 
       <div class="form-header-1">
-        <h1>Pressekontakt</h1>
+        <h1>Kontakt Pressefreikarte</h1>
       </div>
 
       <p class="description">
         Sehr geehrte Pressevertreterinnen und -vertreter, <br />
         <br />
 
-        wir freuen uns über Ihr Interese an unseren Museen. Selbstverständlich laden wir Sie zu
+        wir freuen uns über Ihr Interesse an unseren Museen. Selbstverständlich laden wir Sie zu
         einem Besuch ein. <br />
         Bitte hinterlassen Sie uns Ihre Adressdaten und Erreichbarkeiten, damit wir Ihnen auch in
         Zukunft stets aktuelle Informationen über unser vielfältiges Kulturangebot zukommen lassen
@@ -285,6 +357,22 @@ const validateForm = (): boolean => {
             @blur="validateField('name')"
           />
           <span v-if="errors.name" class="error-message">{{ errors.name }}</span>
+        </div>
+
+                <!-- Arbeitgeber -->
+        <div class="form-group">
+          <label for="employer" class="form-label"
+            >Titel der Medien / Publikation / Anschrift des Verlags *</label
+          >
+          <input
+            id="employer"
+            v-model="formData.employer"
+            type="text"
+            class="form-control"
+            :class="{ error: errors.employer }"
+            @blur="validateField('employer')"
+          />
+          <span v-if="errors.employer" class="error-message">{{ errors.employer }}</span>
         </div>
 
         <!-- Email -->
@@ -313,50 +401,6 @@ const validateForm = (): boolean => {
             @blur="validateField('address')"
           ></textarea>
           <span v-if="errors.address" class="error-message">{{ errors.address }}</span>
-        </div>
-
-        <!-- Museum -->
-        <div class="form-group">
-          <label for="employmentType" class="form-label">Museum *</label>
-
-          <select
-            id="employmentType"
-            v-model="formData.museum"
-            class="custom-select"
-            :class="{ error: errors.museum }"
-            @blur="validateField('museum')"
-            required
-          >
-            <option
-              v-for="opt in museumOptions"
-              class="custom-select-content"
-              :key="opt.value"
-              :value="opt.value"
-              :disabled="opt.value === ''"
-            >
-              {{ opt.text }}
-            </option>
-          </select>
-
-          <span v-if="errors.museum" class="error-message">
-            {{ errors.museum }}
-          </span>
-        </div>
-
-        <!-- Arbeitgeber -->
-        <div class="form-group">
-          <label for="employer" class="form-label"
-            >Titel der Medien / Publikation / Anschrift des Verlags *</label
-          >
-          <input
-            id="employer"
-            v-model="formData.employer"
-            type="text"
-            class="form-control"
-            :class="{ error: errors.employer }"
-            @blur="validateField('employer')"
-          />
-          <span v-if="errors.employer" class="error-message">{{ errors.employer }}</span>
         </div>
 
         <!-- Nachricht (Optional) -->
@@ -405,6 +449,10 @@ const validateForm = (): boolean => {
           <span v-if="errors.signature" class="error-message">{{ errors.signature }}</span>
         </div>
 
+        <div>
+          <input type="file" accept="image/*" capture="environment" @change="handleFileChange">
+        </div>
+
         <!-- Submit Button -->
         <button type="submit" class="btn btn--primary btn--full-width">Absenden</button>
 
@@ -413,6 +461,7 @@ const validateForm = (): boolean => {
       </form>
     </div>
   </div>
+
 </template>
 
 <style scoped>

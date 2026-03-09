@@ -9,6 +9,8 @@ const page = ref(0)
 const size = ref(50)
 const data = ref<Page<Submission> | null>(null)
 const rows = computed(() => data.value?.content ?? [])
+const showPictureModal = ref(false)
+const selectedPicture = ref<string | null>(null)
 
 
 const load = async () => {
@@ -41,7 +43,6 @@ const nextPage = async () => {
 
 const escapeCsv = (value: unknown) => {
   const s = value === null || value === undefined ? '' : String(value)
-  // CSV: Felder mit Komma/Quote/Zeilenumbruch in "..." und Quotes doppeln
   const needsQuotes = /[",\r\n]/.test(s)
   const escaped = s.replace(/"/g, '""')
   return needsQuotes ? `"${escaped}"` : escaped
@@ -70,6 +71,7 @@ const exportRowAsCsv = (r: Submission) => {
     'address',
     'employer',
     'message',
+    'picture',
     'submissionDate',
   ]
 
@@ -81,6 +83,7 @@ const exportRowAsCsv = (r: Submission) => {
     r.address,
     r.employer,
     r.message ?? '',
+    r.picture ?? '',
     r.submissionDate,
   ]
 
@@ -91,6 +94,17 @@ const exportRowAsCsv = (r: Submission) => {
 
 const sendMail = async (id: number) => {
   const resonse = await sendMailSubmission(id)
+}
+
+const openPictureModal = (picture?: string | null) => {
+  if (!picture) return
+  selectedPicture.value = `${picture}`
+  showPictureModal.value = true
+}
+
+const closePictureModal = () => {
+  showPictureModal.value = false
+  selectedPicture.value = null
 }
 
 onMounted(load)
@@ -135,6 +149,9 @@ onMounted(load)
                 Message
               </th>
               <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb">
+                Picture
+              </th>
+              <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb">
                 Submission date
               </th>
               <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb">
@@ -159,14 +176,20 @@ onMounted(load)
               <td style="padding: 8px; border-bottom: 1px solid #f1f5f9; white-space: pre-wrap">
                 {{ r.message ?? '' }}
               </td>
-              <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">{{ r.submissionDate }}</td>
-
               <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">
-                <button type="button" @click="sendMail(r.id)">Send Mail</button>
+                <button
+                  v-if="r.picture"
+                  type="button"
+                  @click="openPictureModal(r.picture ?? '')">
+                    Bild anzeigen
+                </button>
               </td>
-              
+              <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">{{ r.submissionDate }}</td>
               <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">
                 <button type="button" @click="exportRowAsCsv(r)">CSV</button>
+              </td>
+              <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">
+                <button type="button" @click="sendMail(r.id)">Send Mail</button>
               </td>
               
             </tr>
@@ -175,4 +198,38 @@ onMounted(load)
       </div>
     </template>
   </div>
+  <div
+    v-if="showPictureModal"
+    style="
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    "
+    @click.self="closePictureModal"
+  >
+  <div
+    style="
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    "
+  >
+    <img
+      v-if="selectedPicture"
+      :src="selectedPicture"
+      alt="Foto"
+      style="max-width: 80vw; max-height: 70vh; object-fit: contain;"
+    />
+    <button type="button" @click="closePictureModal">Schließen</button>
+  </div>
+</div>
 </template>

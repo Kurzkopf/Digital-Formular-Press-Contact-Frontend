@@ -7,6 +7,7 @@ export type Submission = {
   message?: string | null
   submissionDate: string
   signature: string
+  picture?: string
   createdAt: string
 }
 
