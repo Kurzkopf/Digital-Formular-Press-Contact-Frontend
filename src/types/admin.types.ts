@@ -3,6 +3,7 @@ export type Submission = {
   name: string
   email: string
   address: string
+  museum: string
   employer: string
   message?: string | null
   submissionDate: string

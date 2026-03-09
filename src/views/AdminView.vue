@@ -145,6 +145,9 @@ onMounted(load)
                 Employer
               </th>
               <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb">
+                Museum
+              </th>
+              <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb">
                 Message
               </th>
               <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb">
@@ -172,6 +175,7 @@ onMounted(load)
                 {{ r.address }}
               </td>
               <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">{{ r.employer }}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">{{ r.museum }}</td>
               <td style="padding: 8px; border-bottom: 1px solid #f1f5f9; white-space: pre-wrap">
                 {{ r.message ?? '' }}
               </td>
