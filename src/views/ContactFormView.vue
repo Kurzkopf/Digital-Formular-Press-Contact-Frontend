@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, onUnmounted, nextTick } from 'vue'
 import { contactService } from '@/api/contactForm'
 import type { ContactFormData, Error } from '@/types/contactForm.types'
 import logoUrl from '@/assets/logo/LMSH_Logo.png'
@@ -12,6 +12,11 @@ const hasSignature = ref(false)
 const displayDate = ref('')
 const showPopup = ref(false)
 const picture = ref<File | null>(null)
+
+const videoRef = ref<HTMLVideoElement | null>(null)
+const stream = ref<MediaStream | null>(null)
+const isCameraActive = ref(false)
+const previewImage = ref<string | null>(null)
 
 let formData: ContactFormData = {
   name: '',
@@ -68,7 +73,9 @@ onMounted(() => {
   }
 })
 
-const closePopup = () => { showPopup.value = false }
+const closePopup = () => {
+  showPopup.value = false
+}
 const handleSelect = () => {
   closePopup()
 }
@@ -121,33 +128,10 @@ const handleSubmit = async () => {
     })
     picture.value = null
     formData.picture = ''
+    previewImage.value = null
     clearSignature()
     submitted.value = false
   }, 3000)
-}
-
-const base64Image = ref<string>('')
-
-const handleFileChange = async (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0] || null
-  if (file && file.type.startsWith('image/')) {
-    picture.value = file
-
-    const base64 = await fileToBase64(file)
-    base64Image.value = base64
-    formData.picture = base64
-  }
-}
-
-
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
 }
 
 const getCoordinates = (event: MouseEvent | TouchEvent) => {
@@ -276,39 +260,105 @@ const validateForm = (): boolean => {
 
   return isValid
 }
+
+// Kamera starten
+const startCamera = async () => {
+  try {
+    stream.value = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: 'environment',
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+    })
+    await nextTick()
+
+    const video = videoRef.value
+    if (video) {
+      video.srcObject = stream.value
+      console.log('Stream gesetzt!')
+    } else {
+      console.error('Noch null?')
+    }
+    isCameraActive.value = true
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+// Foto machen
+const takePhoto = () => {
+  const video = videoRef.value
+  if (!video || video.videoWidth === 0) {
+    console.warn('Video lädt noch...')
+    return
+  }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 1280 // Fix ideal
+  canvas.height = 720
+  const ctx = canvas.getContext('2d')
+
+  if (ctx) {
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    const pictureBase64 = canvas.toDataURL('image/jpeg', 0.8)
+    formData.picture = pictureBase64
+    previewImage.value = pictureBase64
+    console.log('Foto OK, Länge:', pictureBase64.length)
+  }
+}
+
+// Kamera stoppen
+const stopCamera = () => {
+  if (stream.value) {
+    stream.value.getTracks().forEach((track) => track.stop())
+    stream.value = null
+  }
+  isCameraActive.value = false
+}
+
+// Neu aufnehmen
+const retakePhoto = () => {
+  previewImage.value = null
+  formData.picture = ''
+}
+
+// Cleanup
+onUnmounted(() => {
+  stopCamera()
+})
 </script>
 
 <template>
-
   <div v-if="showPopup" class="modal-overlay" @click.self="closePopup">
     <div class="modal">
       <h3>Museum auswählen</h3>
       <div class="form-group">
-          <label for="employmentType" class="form-label">Museum *</label>
+        <label for="employmentType" class="form-label">Museum *</label>
 
-          <select
-            id="employmentType"
-            v-model="formData.museum"
-            class="custom-select"
-            :class="{ error: errors.museum }"
-            @blur="validateField('museum')"
-            required
+        <select
+          id="employmentType"
+          v-model="formData.museum"
+          class="custom-select"
+          :class="{ error: errors.museum }"
+          @blur="validateField('museum')"
+          required
+        >
+          <option
+            v-for="opt in museumOptions"
+            class="custom-select-content"
+            :key="opt.value"
+            :value="opt.value"
+            :disabled="opt.value === ''"
           >
-            <option
-              v-for="opt in museumOptions"
-              class="custom-select-content"
-              :key="opt.value"
-              :value="opt.value"
-              :disabled="opt.value === ''"
-            >
-              {{ opt.text }}
-            </option>
-          </select>
+            {{ opt.text }}
+          </option>
+        </select>
 
-          <span v-if="errors.museum" class="error-message">
-            {{ errors.museum }}
-          </span>
-        </div>
+        <span v-if="errors.museum" class="error-message">
+          {{ errors.museum }}
+        </span>
+      </div>
       <button @click="handleSelect">OK</button>
       <button @click="closePopup">Schließen</button>
     </div>
@@ -359,7 +409,7 @@ const validateForm = (): boolean => {
           <span v-if="errors.name" class="error-message">{{ errors.name }}</span>
         </div>
 
-                <!-- Arbeitgeber -->
+        <!-- Arbeitgeber -->
         <div class="form-group">
           <label for="employer" class="form-label"
             >Titel der Medien / Publikation / Anschrift des Verlags *</label
@@ -449,19 +499,45 @@ const validateForm = (): boolean => {
           <span v-if="errors.signature" class="error-message">{{ errors.signature }}</span>
         </div>
 
-        <div>
-          <input type="file" accept="image/*" capture="environment" @change="handleFileChange">
+        <div class="camera-section">
+          <!-- Kamera-Button -->
+          <button
+            v-if="!isCameraActive"
+            type="button"
+            @click="startCamera"
+            class="camera-btn"
+            :disabled="isCameraActive"
+          >
+            📸 Kamera öffnen
+          </button>
+
+          <!-- Live-Preview & Controls -->
+          <div v-show="isCameraActive" class="camera-preview">
+            <video ref="videoRef" autoplay muted playsinline class="video-preview"></video>
+
+            <div class="camera-controls">
+              <button type="button" @click="takePhoto" class="photo-btn">📸 Foto machen</button>
+              <button type="button" @click="stopCamera" class="stop-btn">Kamera schließen</button>
+            </div>
+          </div>
+
+          <!-- Foto-Vorschau -->
+          <div v-if="previewImage" class="preview-image">
+            <img :src="previewImage" alt="Vorschau" />
+            <button type="button" @click="retakePhoto">Neu aufnehmen</button>
+          </div>
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="btn btn--primary btn--full-width">Absenden</button>
+        <button type="submit" class="btn btn--primary btn--full-width" :disabled="!previewImage">
+          Absenden
+        </button>
 
         <!-- Success Message -->
         <div v-if="submitted" class="success-message">✓ Formular erfolgreich übermittelt!</div>
       </form>
     </div>
   </div>
-
 </template>
 
 <style scoped>

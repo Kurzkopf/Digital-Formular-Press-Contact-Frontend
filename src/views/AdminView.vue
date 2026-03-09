@@ -12,7 +12,6 @@ const rows = computed(() => data.value?.content ?? [])
 const showPictureModal = ref(false)
 const selectedPicture = ref<string | null>(null)
 
-
 const load = async () => {
   loading.value = true
   error.value = null
@@ -177,11 +176,8 @@ onMounted(load)
                 {{ r.message ?? '' }}
               </td>
               <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">
-                <button
-                  v-if="r.picture"
-                  type="button"
-                  @click="openPictureModal(r.picture ?? '')">
-                    Bild anzeigen
+                <button v-if="r.picture" type="button" @click="openPictureModal(r.picture ?? '')">
+                  Bild anzeigen
                 </button>
               </td>
               <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">{{ r.submissionDate }}</td>
@@ -191,7 +187,6 @@ onMounted(load)
               <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">
                 <button type="button" @click="sendMail(r.id)">Send Mail</button>
               </td>
-              
             </tr>
           </tbody>
         </table>
@@ -203,7 +198,7 @@ onMounted(load)
     style="
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0, 0, 0, 0.6);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -211,25 +206,25 @@ onMounted(load)
     "
     @click.self="closePictureModal"
   >
-  <div
-    style="
-      background: white;
-      padding: 16px;
-      border-radius: 8px;
-      max-width: 90vw;
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    "
-  >
-    <img
-      v-if="selectedPicture"
-      :src="selectedPicture"
-      alt="Foto"
-      style="max-width: 80vw; max-height: 70vh; object-fit: contain;"
-    />
-    <button type="button" @click="closePictureModal">Schließen</button>
+    <div
+      style="
+        background: white;
+        padding: 16px;
+        border-radius: 8px;
+        max-width: 90vw;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      "
+    >
+      <img
+        v-if="selectedPicture"
+        :src="selectedPicture"
+        alt="Foto"
+        style="max-width: 80vw; max-height: 70vh; object-fit: contain"
+      />
+      <button type="button" @click="closePictureModal">Schließen</button>
+    </div>
   </div>
-</div>
 </template>
