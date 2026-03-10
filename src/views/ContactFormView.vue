@@ -106,6 +106,7 @@ const handleSubmit = async () => {
   // API-Call mit den Daten
   const response = await contactService.submitForm(formData)
   console.log(formData)
+  console.log(response)
 
   if (response.error) {
     console.error('Fehler:', response.error)
@@ -127,7 +128,6 @@ const handleSubmit = async () => {
       signature: '',
       picture: '',
     })
-    picture.value = null
     formData.picture = ''
     previewImage.value = null
     clearSignature()
