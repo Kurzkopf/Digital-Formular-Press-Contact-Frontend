@@ -73,12 +73,9 @@ onMounted(() => {
   }
 })
 
-const closePopup = () => {
-  showPopup.value = false
-}
 const handleSelect = () => {
   if (formData.museum) {
-    closePopup()
+    showPopup.value = false
   } else {
     alert(`Es muss ein Museum ausgewählt werden`)
   }
@@ -334,7 +331,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="showPopup" class="modal-overlay" @click.self="closePopup">
+  <div v-if="showPopup" class="modal-overlay">
     <div class="modal">
       <h3>Museum auswählen</h3>
       <div class="form-group">
