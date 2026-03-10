@@ -77,7 +77,11 @@ const closePopup = () => {
   showPopup.value = false
 }
 const handleSelect = () => {
-  closePopup()
+  if (formData.museum) {
+    closePopup()
+  } else {
+    alert(`Es muss ein Museum ausgewählt werden`)
+  }
 }
 
 const handleSubmit = async () => {
@@ -359,8 +363,9 @@ onUnmounted(() => {
           {{ errors.museum }}
         </span>
       </div>
-      <button @click="handleSelect">OK</button>
-      <button @click="closePopup">Schließen</button>
+      <button type="button" class="btn btn--secondary btn--sm clear-btn" @click="handleSelect">
+        OK
+      </button>
     </div>
   </div>
 
