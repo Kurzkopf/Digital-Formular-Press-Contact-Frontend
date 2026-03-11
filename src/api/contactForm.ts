@@ -3,7 +3,7 @@ import type {
   ContactFormData,
   ContactSubmission,
   ContactSubmissionResponse,
-} from '@/types/contactForm.types'
+} from '@/types/contactForm.types.ts'
 
 class ContactService {
   // Formular absenden

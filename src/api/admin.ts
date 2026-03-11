@@ -1,5 +1,5 @@
 import { type ApiResponse, api } from './api'
-import type { Page, Submission } from '@/types/admin.types'
+import type { Page, Submission } from '@/types/admin.types.ts'
 
 export const getAllSubmissions = async (
   page: number,

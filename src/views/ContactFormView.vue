@@ -11,7 +11,6 @@ const isDrawing = ref(false)
 const hasSignature = ref(false)
 const displayDate = ref('')
 const showPopup = ref(false)
-const picture = ref<File | null>(null)
 
 const videoRef = ref<HTMLVideoElement | null>(null)
 const stream = ref<MediaStream | null>(null)
@@ -82,9 +81,11 @@ const handleSelect = () => {
 }
 
 const handleSubmit = async () => {
+  console.log('test1')
   if (!validateForm()) {
     return
   }
+  console.log('test2')
 
   // Signature als Base64 holen
   if (signatureCanvas.value) {
@@ -100,9 +101,10 @@ const handleSubmit = async () => {
     message: formData.message || undefined,
     date: formData.date,
     signature: formData.signature,
-    picture: formData.picture,
+    picture: formData.picture || undefined,
   }
 
+  console.log('test3')
   // API-Call mit den Daten
   const response = await contactService.submitForm(formData)
   console.log(formData)
@@ -516,7 +518,6 @@ onUnmounted(() => {
           <!-- Live-Preview & Controls -->
           <div v-show="isCameraActive" class="camera-preview">
             <video ref="videoRef" autoplay muted playsinline class="video-preview"></video>
-
             <div class="camera-controls">
               <button type="button" @click="takePhoto" class="photo-btn">📸 Foto machen</button>
               <button type="button" @click="stopCamera" class="stop-btn">Kamera schließen</button>
@@ -531,7 +532,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="btn btn--primary btn--full-width" :disabled="!previewImage">
+        <button type="submit" class="btn btn--primary btn--full-width">
           Absenden
         </button>
 
