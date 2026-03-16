@@ -31,11 +31,7 @@ let formData: ContactFormData = {
 
 const museumOptions = [
   { text: 'Bitte auswählen', value: '' },
-  { text: 'Museum für Archäologie', value: 'Museu für Archäologie' },
-  {
-    text: 'Museum für Kunst und Kulturgeschichte Schloss Gottorf',
-    value: 'Museum für Kunst und Kulturgeschichte Schloss Gottorf',
-  },
+  { text: 'Museumsinsel Schloss Gottorf', value: 'Museumsinsel Schloss Gottorf' },
   { text: 'Gottorfer Globus & Barockgarten', value: 'Gottorfer Globus & Barockgarten' },
   { text: 'Wickinger Museum Haithabu', value: 'Wickinger Museum Haithabu' },
   { text: 'Freilichtmuseum Molfsee', value: 'Freilichtmuseum Molfsee' },
@@ -101,7 +97,7 @@ const handleSubmit = async () => {
     message: formData.message || undefined,
     date: formData.date,
     signature: formData.signature,
-    picture: formData.picture || undefined,
+    picture: formData.picture,
   }
 
   console.log('test3')
@@ -258,6 +254,11 @@ const validateForm = (): boolean => {
 
   if (!hasSignature.value) {
     errors.signature = 'Unterschrift ist erforderlich'
+    isValid = false
+  }
+
+  if (!formData.picture) {
+    errors.signature = 'Bild eines Presseausweises ist erforderlich'
     isValid = false
   }
 
@@ -460,7 +461,7 @@ onUnmounted(() => {
         <!-- Nachricht (Optional) -->
         <div class="form-group">
           <label for="message" class="form-label"
-            >Gerne können Sie unserer Pressestele auch eine Nachricht hinterlassen:</label
+            >Gerne können Sie unserer Pressestelle auch eine Nachricht hinterlassen:</label
           >
           <textarea
             id="message"

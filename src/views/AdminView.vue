@@ -82,7 +82,7 @@ const exportRowAsCsv = (r: Submission) => {
     r.address,
     r.employer,
     r.message ?? '',
-    r.picture ?? '',
+    r.picture,
     r.submissionDate,
   ]
 
@@ -180,7 +180,7 @@ onMounted(load)
                 {{ r.message ?? '' }}
               </td>
               <td style="padding: 8px; border-bottom: 1px solid #f1f5f9">
-                <button v-if="r.picture" type="button" @click="openPictureModal(r.picture ?? '')">
+                <button v-if="r.picture" type="button" @click="openPictureModal(r.picture)">
                   Bild anzeigen
                 </button>
               </td>

@@ -7,7 +7,7 @@ export interface ContactFormData {
   message?: string
   date: string
   signature: string
-  picture?: string
+  picture: string
 }
 
 export interface ContactSubmissionResponse {
